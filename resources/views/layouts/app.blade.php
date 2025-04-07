@@ -1,24 +1,59 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Список задач - @yield('title', 'TODO App')</title>
     <style>
         :root {
-            --primary-color: #4a6da7;
-            --secondary-color: #537cc8;
-            --text-color: #333;
-            --bg-color: #f9f9f9;
+            /* Темная тема */
+            --dark-bg-color: #121212;
+            --dark-card-color: #1e1e1e;
+            --dark-text-color: #f1f1f1;
+            --dark-border-color: #333;
+            --dark-primary-color: #7b68ee;
+            --dark-secondary-color: #9370db;
+            --dark-hover-color: #8a2be2;
+            
+            /* Светлая тема */
+            --light-bg-color: #f5f5f5;
+            --light-card-color: #ffffff;
+            --light-text-color: #333333;
+            --light-border-color: #e0e0e0;
+            --light-primary-color: #8a6bbf;
+            --light-secondary-color: #d8c8b8;
+            --light-hover-color: #9d7cca;
+            
+            /* Общие для обеих тем */
             --error-color: #e74c3c;
             --success-color: #2ecc71;
-            --border-color: #ddd;
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: var(--dark-bg-color);
+            --card-color: var(--dark-card-color);
+            --text-color: var(--dark-text-color);
+            --border-color: var(--dark-border-color);
+            --primary-color: var(--dark-primary-color);
+            --secondary-color: var(--dark-secondary-color);
+            --hover-color: var(--dark-hover-color);
+        }
+        
+        [data-theme="light"] {
+            --bg-color: var(--light-bg-color);
+            --card-color: var(--light-card-color);
+            --text-color: var(--light-text-color);
+            --border-color: var(--light-border-color);
+            --primary-color: var(--light-primary-color);
+            --secondary-color: var(--light-secondary-color);
+            --hover-color: var(--light-hover-color);
         }
         
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
         }
         
         body {
@@ -41,6 +76,7 @@
             padding: 1rem;
             margin-bottom: 2rem;
             border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
         
         .header-content {
@@ -99,7 +135,7 @@
         }
         
         .btn:hover {
-            background-color: var(--secondary-color);
+            background-color: var(--hover-color);
         }
         
         .btn-small {
@@ -136,6 +172,8 @@
             border-radius: 4px;
             font-size: 1rem;
             font-family: inherit;
+            background-color: var(--card-color);
+            color: var(--text-color);
         }
         
         textarea {
@@ -148,7 +186,7 @@
         }
         
         .todo-item {
-            background-color: white;
+            background-color: var(--card-color);
             border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 15px;
@@ -156,6 +194,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         
         .todo-item.completed {
@@ -176,13 +215,14 @@
         }
         
         .todo-description {
-            color: #666;
+            color: var(--text-color);
+            opacity: 0.8;
         }
         
         .card {
-            background-color: white;
+            background-color: var(--card-color);
             border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             padding: 20px;
             margin-bottom: 20px;
         }
@@ -207,6 +247,31 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+        }
+        
+        /* Переключатель темы */
+        .theme-toggle {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-right: 10px;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .theme-toggle svg {
+            margin-right: 5px;
+            width: 16px;
+            height: 16px;
         }
         
         /* Адаптивность для мобильных устройств */
@@ -250,6 +315,23 @@
             <div class="header-content">
                 <h1>Список задач</h1>
                 <div class="user-nav">
+                    <button id="theme-toggle" class="theme-toggle">
+                        <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                        <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <span id="theme-text">Светлая тема</span>
+                    </button>
                     @auth
                         <span class="user-info">{{ Auth::user()->name }}</span>
                         <form action="{{ route('logout') }}" method="POST">
@@ -298,6 +380,39 @@
                     }, 500);
                 }, 3000);
             });
+            
+            // Обработка переключения темы
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeText = document.getElementById('theme-text');
+            const themeIconDark = document.getElementById('theme-icon-dark');
+            const themeIconLight = document.getElementById('theme-icon-light');
+            const html = document.documentElement;
+            
+            // Загрузить сохраненную тему из localStorage или использовать темную по умолчанию
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme);
+            
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                applyTheme(newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
+            
+            function applyTheme(theme) {
+                html.setAttribute('data-theme', theme);
+                
+                if (theme === 'dark') {
+                    themeText.textContent = 'Светлая тема';
+                    themeIconDark.style.display = 'none';
+                    themeIconLight.style.display = 'inline-block';
+                } else {
+                    themeText.textContent = 'Тёмная тема';
+                    themeIconDark.style.display = 'inline-block';
+                    themeIconLight.style.display = 'none';
+                }
+            }
         });
     </script>
 </body>
