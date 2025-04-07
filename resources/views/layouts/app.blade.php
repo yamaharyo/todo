@@ -83,20 +83,30 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: nowrap;
         }
         
         header h1 {
             font-size: 2rem;
+            white-space: nowrap;
         }
         
         .user-nav {
             display: flex;
             align-items: center;
             gap: 15px;
+            flex-wrap: nowrap;
+        }
+        
+        .user-nav form {
+            margin: 0;
+            display: flex;
+            align-items: center;
         }
         
         .user-info {
             margin-right: 15px;
+            white-space: nowrap;
         }
         
         .text-error {
@@ -141,6 +151,7 @@
         .btn-small {
             padding: 4px 8px;
             font-size: 0.9rem;
+            white-space: nowrap;
         }
         
         .btn-danger {
@@ -207,7 +218,23 @@
         
         .todo-actions {
             display: flex;
-            gap: 5px;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .todo-actions form {
+            margin-bottom: 0;
+        }
+        
+        .todo-actions a,
+        .todo-actions button {
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            line-height: 1;
+            font-size: 0.9rem;
         }
         
         .todo-title {
@@ -262,6 +289,7 @@
             border-radius: 4px;
             border: 1px solid rgba(255, 255, 255, 0.3);
             margin-right: 10px;
+            white-space: nowrap;
         }
         
         .theme-toggle:hover {
@@ -297,14 +325,21 @@
             }
             
             .header-content {
-                flex-direction: column;
-                gap: 10px;
+                font-size: 0.9rem;
             }
             
             .user-nav {
-                flex-direction: column;
-                gap: 10px;
-                width: 100%;
+                gap: 8px;
+            }
+            
+            .theme-toggle {
+                padding: 4px 8px;
+                font-size: 0.8rem;
+            }
+            
+            .theme-toggle svg {
+                width: 14px;
+                height: 14px;
             }
         }
     </style>

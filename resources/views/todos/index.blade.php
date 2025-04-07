@@ -20,7 +20,7 @@
                             <p class="todo-description">{{ $todo->description }}</p>
                         </div>
                         <div class="todo-actions">
-                            <form action="{{ route('todos.toggle', $todo) }}" method="POST">
+                            <form action="{{ route('todos.toggle', $todo) }}" method="POST" style="display: inline;">
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit" class="btn btn-small {{ $todo->completed ? 'btn-danger' : 'btn-success' }}">
@@ -28,7 +28,7 @@
                                 </button>
                             </form>
                             <a href="{{ route('todos.edit', $todo) }}" class="btn btn-small">Редактировать</a>
-                            <form action="{{ route('todos.destroy', $todo) }}" method="POST">
+                            <form action="{{ route('todos.destroy', $todo) }}" method="POST" style="display: inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Вы уверены?')">Удалить</button>
