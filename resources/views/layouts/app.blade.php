@@ -370,6 +370,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            position: relative;
         }
         
         .theme-toggle button {
@@ -396,23 +397,28 @@
             padding: 6px 12px;
             border-radius: 4px;
             cursor: pointer;
-            position: relative;
         }
         
         .user-dropdown:hover {
             background-color: rgba(255, 255, 255, 0.2);
         }
         
+        .user-menu-container {
+            position: relative;
+        }
+        
         .dropdown-menu {
             display: none;
             position: absolute;
+            top: 100%;
             right: 0;
-            top: 45px;
+            margin-top: 8px;
             background-color: var(--card-color);
             min-width: 160px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             border-radius: 4px;
-            z-index: 100;
+            z-index: 999;
+            border: 1px solid var(--border-color);
         }
         
         .dropdown-item {
@@ -425,15 +431,13 @@
             color: var(--text-color);
             cursor: pointer;
             font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
         }
         
         .dropdown-item:hover {
-            background-color: var(--hover-color);
+            background-color: var(--primary-color);
             color: white;
-        }
-        
-        .user-dropdown:hover .dropdown-menu {
-            display: block;
         }
     </style>
     @yield('styles')
@@ -469,17 +473,19 @@
                             </button>
                         </div>
                         @auth
-                            <a href="#" class="user-dropdown">
-                                {{ Auth::user()->name }}
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M6 9l6 6 6-6"></path>
-                                </svg>
-                            </a>
-                            <div class="dropdown-menu">
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item">Выйти</button>
-                                </form>
+                            <div class="user-menu-container">
+                                <a href="#" class="user-dropdown">
+                                    {{ Auth::user()->name }}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 9l6 6 6-6"></path>
+                                    </svg>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <form action="{{ route('logout') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">Выйти</button>
+                                    </form>
+                                </div>
                             </div>
                         @else
                             <a href="{{ route('login') }}" class="btn btn-small">Войти</a>
@@ -567,6 +573,43 @@
             if (savedTheme) {
                 htmlElement.setAttribute('data-theme', savedTheme);
                 updateThemeIcons(savedTheme === 'dark');
+            }
+            
+            // Обработка клика по имени пользователя для открытия/закрытия выпадающего меню
+            const userDropdown = document.querySelector('.user-dropdown');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            
+            if (userDropdown && dropdownMenu) {
+                // При загрузке страницы меню скрыто
+                dropdownMenu.style.display = 'none';
+                
+                userDropdown.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Переключаем видимость меню
+                    if (dropdownMenu.style.display === 'block') {
+                        dropdownMenu.style.display = 'none';
+                    } else {
+                        dropdownMenu.style.display = 'block';
+                    }
+                });
+                
+                // Закрытие меню при клике вне него
+                document.addEventListener('click', function(e) {
+                    if (dropdownMenu.style.display === 'block' && 
+                        !document.querySelector('.user-menu-container').contains(e.target)) {
+                        dropdownMenu.style.display = 'none';
+                    }
+                });
+                
+                // Предотвращаем закрытие при клике на само меню
+                dropdownMenu.addEventListener('click', function(e) {
+                    // Разрешаем клик на форму выхода
+                    if (!e.target.classList.contains('dropdown-item')) {
+                        e.stopPropagation();
+                    }
+                });
             }
         });
     </script>

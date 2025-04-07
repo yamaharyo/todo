@@ -117,16 +117,16 @@
         display: flex;
         flex-wrap: wrap;
         gap: 20px;
-        margin-bottom: 20px;
     }
     
-    .board {
+    .board-container {
+        background-color: var(--card-color);
+        border-radius: 8px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        padding: 15px;
+        margin-bottom: 20px;
         width: 300px;
         min-height: 300px;
-        background-color: var(--card-color);
-        border-radius: 10px;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-        overflow: hidden;
         display: flex;
         flex-direction: column;
     }
@@ -136,15 +136,15 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        color: white;
+        color: var(--text-color);
         border-top-left-radius: 10px;
         border-top-right-radius: 10px;
     }
     
-    .board-header h3 {
+    .board-header h2 {
         margin: 0;
-        font-size: 1.2rem;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        color: var(--text-color);
+        font-size: 1.4rem;
     }
     
     .board-actions {
@@ -307,6 +307,38 @@
     .board-header:active {
         cursor: grabbing;
     }
+
+    .add-task-section {
+        margin-top: 15px;
+        padding: 0 10px 10px 10px;
+    }
+    
+    .btn-add {
+        width: 100%;
+        text-align: center;
+        background-color: transparent;
+        border: 2px dashed var(--border-color);
+        color: var(--text-muted);
+        padding: 10px;
+    }
+
+    .todo-content {
+        flex: 1;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 100%;
+    }
+    
+    .todo-content h3 {
+        margin-bottom: 5px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .todo-content p {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
 </style>
 @endsection
 
@@ -370,6 +402,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Перемещаем задачу в новую доску (визуально)
             if (todoElement && taskContainer) {
+                // Удаляем сообщение "На этой доске нет задач", если оно есть
+                const noTasksMessage = taskContainer.querySelector('.no-tasks');
+                if (noTasksMessage) {
+                    noTasksMessage.remove();
+                }
+                
                 taskContainer.appendChild(todoElement);
                 
                 // Отправляем AJAX запрос для обновления привязки задачи к доске
@@ -403,6 +441,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('Задача успешно перемещена', data);
             
+            // Удаляем существующие уведомления перед созданием новых
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => notification.remove());
+            
             // Опционально: показываем уведомление
             const notification = document.createElement('div');
             notification.className = 'notification success';
@@ -416,6 +458,10 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Ошибка:', error);
+            
+            // Удаляем существующие уведомления перед созданием новых
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => notification.remove());
             
             // Показываем уведомление об ошибке
             const notification = document.createElement('div');
