@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Список задач - @yield('title', 'TODO App')</title>
     <style>
         :root {
@@ -342,7 +343,100 @@
                 height: 14px;
             }
         }
+        
+        /* Navigation */
+        .nav-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-links a.active {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .theme-toggle button {
+            display: flex;
+            align-items: center;
+            padding: 6px;
+            background-color: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .theme-toggle button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .user-dropdown {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .user-dropdown:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 45px;
+            background-color: var(--card-color);
+            min-width: 160px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 100;
+        }
+        
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 10px 15px;
+            text-align: left;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--hover-color);
+            color: white;
+        }
+        
+        .user-dropdown:hover .dropdown-menu {
+            display: block;
+        }
     </style>
+    @yield('styles')
 </head>
 <body>
     <div class="container">
@@ -350,33 +444,48 @@
             <div class="header-content">
                 <h1>Список задач</h1>
                 <div class="user-nav">
-                    <button id="theme-toggle" class="theme-toggle">
-                        <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                        </svg>
-                        <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="5"></circle>
-                            <line x1="12" y1="1" x2="12" y2="3"></line>
-                            <line x1="12" y1="21" x2="12" y2="23"></line>
-                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                            <line x1="1" y1="12" x2="3" y2="12"></line>
-                            <line x1="21" y1="12" x2="23" y2="12"></line>
-                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                        </svg>
-                        <span id="theme-text">Светлая тема</span>
-                    </button>
-                    @auth
-                        <span class="user-info">{{ Auth::user()->name }}</span>
-                        <form action="{{ route('logout') }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-small">Выйти</button>
-                        </form>
-                    @else
-                        <a href="{{ route('login') }}" class="btn btn-small">Войти</a>
-                        <a href="{{ route('register') }}" class="btn btn-small">Регистрация</a>
-                    @endauth
+                    <div class="nav-links">
+                        <a href="{{ route('boards.index') }}" class="{{ request()->routeIs('boards.*') ? 'active' : '' }}">Доски</a>
+                        <a href="{{ route('todos.index') }}" class="{{ request()->routeIs('todos.index') ? 'active' : '' }}">Все задачи</a>
+                    </div>
+                    
+                    <div class="nav-right">
+                        <div class="theme-toggle">
+                            <button id="theme-toggle-btn">
+                                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                </svg>
+                                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        @auth
+                            <a href="#" class="user-dropdown">
+                                {{ Auth::user()->name }}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 9l6 6 6-6"></path>
+                                </svg>
+                            </a>
+                            <div class="dropdown-menu">
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">Выйти</button>
+                                </form>
+                            </div>
+                        @else
+                            <a href="{{ route('login') }}" class="btn btn-small">Войти</a>
+                            <a href="{{ route('register') }}" class="btn btn-small">Регистрация</a>
+                        @endauth
+                    </div>
                 </div>
             </div>
         </header>
@@ -403,9 +512,9 @@
     </div>
     
     <script>
-        // Автоматически скрывать сообщения об успехе через 3 секунды
         document.addEventListener('DOMContentLoaded', function() {
-            let alerts = document.querySelectorAll('.alert');
+            // Автоматически скрывать уведомления через 3 секунды
+            const alerts = document.querySelectorAll('.alert');
             alerts.forEach(function(alert) {
                 setTimeout(function() {
                     alert.style.opacity = '0';
@@ -416,39 +525,51 @@
                 }, 3000);
             });
             
-            // Обработка переключения темы
-            const themeToggle = document.getElementById('theme-toggle');
-            const themeText = document.getElementById('theme-text');
-            const themeIconDark = document.getElementById('theme-icon-dark');
-            const themeIconLight = document.getElementById('theme-icon-light');
-            const html = document.documentElement;
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            const darkIcon = document.getElementById('theme-icon-dark');
+            const lightIcon = document.getElementById('theme-icon-light');
+            const htmlElement = document.documentElement;
             
-            // Загрузить сохраненную тему из localStorage или использовать темную по умолчанию
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            applyTheme(savedTheme);
+            // Проверяем текущую тему
+            const isDarkTheme = htmlElement.getAttribute('data-theme') === 'dark';
+            updateThemeIcons(isDarkTheme);
             
-            themeToggle.addEventListener('click', function() {
-                const currentTheme = html.getAttribute('data-theme');
-                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                
-                applyTheme(newTheme);
-                localStorage.setItem('theme', newTheme);
-            });
+            // Добавляем обработчик события
+            if (themeToggleBtn) {
+                themeToggleBtn.addEventListener('click', function() {
+                    const currentTheme = htmlElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    
+                    // Устанавливаем новую тему
+                    htmlElement.setAttribute('data-theme', newTheme);
+                    
+                    // Обновляем иконку
+                    updateThemeIcons(newTheme === 'dark');
+                    
+                    // Сохраняем выбор в localStorage
+                    localStorage.setItem('theme', newTheme);
+                });
+            }
             
-            function applyTheme(theme) {
-                html.setAttribute('data-theme', theme);
-                
-                if (theme === 'dark') {
-                    themeText.textContent = 'Светлая тема';
-                    themeIconDark.style.display = 'none';
-                    themeIconLight.style.display = 'inline-block';
+            // Функция для обновления иконок
+            function updateThemeIcons(isDark) {
+                if (isDark) {
+                    darkIcon.style.display = 'none';
+                    lightIcon.style.display = 'block';
                 } else {
-                    themeText.textContent = 'Тёмная тема';
-                    themeIconDark.style.display = 'inline-block';
-                    themeIconLight.style.display = 'none';
+                    darkIcon.style.display = 'block';
+                    lightIcon.style.display = 'none';
                 }
+            }
+            
+            // Загружаем тему из localStorage при загрузке страницы
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                htmlElement.setAttribute('data-theme', savedTheme);
+                updateThemeIcons(savedTheme === 'dark');
             }
         });
     </script>
+    @yield('scripts')
 </body>
 </html> 

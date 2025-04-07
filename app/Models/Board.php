@@ -5,42 +5,37 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Todo extends Model
+class Board extends Model
 {
     use HasFactory;
-    
+
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
     protected $fillable = [
-        'title',
-        'description',
-        'completed',
-        'user_id',
-        'board_id',
+        'name',
+        'color',
         'position',
+        'user_id',
     ];
-    
-    protected $casts = [
-        'completed' => 'boolean',
-    ];
-    
+
     /**
-     * Получить пользователя, которому принадлежит задача.
+     * Получить пользователя, которому принадлежит доска.
      */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
-    
+
     /**
-     * Получить доску, к которой относится задача.
+     * Получить все задачи на доске.
      */
-    public function board(): BelongsTo
+    public function todos(): HasMany
     {
-        return $this->belongsTo(Board::class);
+        return $this->hasMany(Todo::class);
     }
 }
