@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Todo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TodoController extends Controller
 {
@@ -12,7 +13,7 @@ class TodoController extends Controller
      */
     public function index()
     {
-        $todos = Todo::all();
+        $todos = Auth::user()->todos;
         return view('todos.index', compact('todos'));
     }
 
@@ -34,7 +35,7 @@ class TodoController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        Todo::create([
+        Auth::user()->todos()->create([
             'title' => $request->title,
             'description' => $request->description,
         ]);
@@ -48,6 +49,7 @@ class TodoController extends Controller
      */
     public function show(Todo $todo)
     {
+        $this->authorize('view', $todo);
         return view('todos.show', compact('todo'));
     }
 
@@ -56,6 +58,7 @@ class TodoController extends Controller
      */
     public function edit(Todo $todo)
     {
+        $this->authorize('update', $todo);
         return view('todos.edit', compact('todo'));
     }
 
@@ -64,6 +67,8 @@ class TodoController extends Controller
      */
     public function update(Request $request, Todo $todo)
     {
+        $this->authorize('update', $todo);
+        
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -84,6 +89,8 @@ class TodoController extends Controller
      */
     public function toggleComplete(Todo $todo)
     {
+        $this->authorize('update', $todo);
+        
         $todo->update([
             'completed' => !$todo->completed
         ]);
@@ -97,6 +104,8 @@ class TodoController extends Controller
      */
     public function destroy(Todo $todo)
     {
+        $this->authorize('delete', $todo);
+        
         $todo->delete();
 
         return redirect()->route('todos.index')

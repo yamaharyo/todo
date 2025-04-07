@@ -43,8 +43,30 @@
             border-radius: 5px;
         }
         
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
         header h1 {
             font-size: 2rem;
+        }
+        
+        .user-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-info {
+            margin-right: 15px;
+        }
+        
+        .text-error {
+            color: var(--error-color);
+            font-size: 0.9rem;
+            margin-top: 5px;
         }
         
         .alert {
@@ -208,13 +230,38 @@
             header h1 {
                 font-size: 1.5rem;
             }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .user-nav {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Список задач</h1>
+            <div class="header-content">
+                <h1>Список задач</h1>
+                <div class="user-nav">
+                    @auth
+                        <span class="user-info">{{ Auth::user()->name }}</span>
+                        <form action="{{ route('logout') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-small">Выйти</button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}" class="btn btn-small">Войти</a>
+                        <a href="{{ route('register') }}" class="btn btn-small">Регистрация</a>
+                    @endauth
+                </div>
+            </div>
         </header>
         
         @if(session('success'))
