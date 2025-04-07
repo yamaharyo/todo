@@ -127,5 +127,38 @@
         border-left: 3px solid;
         background-color: var(--hover-color);
     }
+    
+    .toggle-button {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+    }
+    
+    .toggle-button:hover {
+        transform: scale(1.1);
+    }
+    
+    .edit-button, .delete-button {
+        background: none;
+        border: none;
+        padding: 5px;
+        margin: 0 2px;
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: color 0.2s, transform 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .edit-button:hover, .delete-button:hover {
+        color: var(--text-color);
+        transform: scale(1.1);
+    }
 </style>
 @endsection 
