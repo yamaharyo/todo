@@ -449,8 +449,11 @@
                 <h1>Список задач</h1>
                 <div class="user-nav">
                     <div class="nav-links">
-                        <a href="{{ route('boards.index') }}" class="{{ request()->routeIs('boards.*') ? 'active' : '' }}">Доски</a>
-                        <a href="{{ route('todos.index') }}" class="{{ request()->routeIs('todos.index') ? 'active' : '' }}">Все задачи</a>
+                        <div class="flex space-x-4">
+                            <a href="{{ route('boards.index') }}" class="text-gray-300 hover:text-white">Доски</a>
+                            <a href="{{ route('todos.index') }}" class="text-gray-300 hover:text-white">Задачи</a>
+                            <a href="{{ route('statistics.index') }}" class="text-gray-300 hover:text-white">Статистика</a>
+                        </div>
                     </div>
                     
                     <div class="nav-right">

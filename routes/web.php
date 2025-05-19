@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\StatisticsController;
 use Illuminate\Support\Facades\Route;
 
 // Маршруты аутентификации
@@ -42,4 +43,26 @@ Route::middleware('auth')->group(function () {
     // Маршруты для обновления порядка элементов
     Route::post('/boards/order', [OrderController::class, 'updateBoardOrder'])->name('boards.update-order');
     Route::post('/todos/order', [OrderController::class, 'updateTodoOrder'])->name('todos.update-order');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/boards', [BoardController::class, 'index'])->name('boards.index');
+    Route::get('/boards/create', [BoardController::class, 'create'])->name('boards.create');
+    Route::post('/boards', [BoardController::class, 'store'])->name('boards.store');
+    Route::get('/boards/{board}', [BoardController::class, 'show'])->name('boards.show');
+    Route::get('/boards/{board}/edit', [BoardController::class, 'edit'])->name('boards.edit');
+    Route::put('/boards/{board}', [BoardController::class, 'update'])->name('boards.update');
+    Route::delete('/boards/{board}', [BoardController::class, 'destroy'])->name('boards.destroy');
+    Route::post('/boards/reorder', [BoardController::class, 'reorder'])->name('boards.reorder');
+
+    Route::get('/todos', [TodoController::class, 'index'])->name('todos.index');
+    Route::get('/todos/create', [TodoController::class, 'create'])->name('todos.create');
+    Route::post('/todos', [TodoController::class, 'store'])->name('todos.store');
+    Route::get('/todos/{todo}/edit', [TodoController::class, 'edit'])->name('todos.edit');
+    Route::put('/todos/{todo}', [TodoController::class, 'update'])->name('todos.update');
+    Route::delete('/todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
+    Route::post('/todos/{todo}/toggle', [TodoController::class, 'toggleComplete'])->name('todos.toggle');
+    Route::post('/todos/move', [TodoController::class, 'move'])->name('todos.move');
+
+    Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
 });
