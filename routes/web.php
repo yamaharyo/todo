@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     // Маршруты для обновления порядка элементов
     Route::post('/boards/order', [OrderController::class, 'updateBoardOrder'])->name('boards.update-order');
     Route::post('/todos/order', [OrderController::class, 'updateTodoOrder'])->name('todos.update-order');
+    Route::patch('/todos/{todo}/reminder', [TodoController::class, 'setReminder'])->name('todos.reminder');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -61,8 +62,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/todos/{todo}/edit', [TodoController::class, 'edit'])->name('todos.edit');
     Route::put('/todos/{todo}', [TodoController::class, 'update'])->name('todos.update');
     Route::delete('/todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
-    Route::post('/todos/{todo}/toggle', [TodoController::class, 'toggleComplete'])->name('todos.toggle');
-    Route::post('/todos/move', [TodoController::class, 'move'])->name('todos.move');
+    Route::patch('/todos/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
+
+    Route::post('/boards/order', [OrderController::class, 'updateBoardOrder'])->name('boards.update-order');
+    Route::post('/todos/order', [OrderController::class, 'updateTodoOrder'])->name('todos.update-order');
 
     Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');
 });

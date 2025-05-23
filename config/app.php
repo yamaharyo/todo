@@ -95,9 +95,33 @@ return [
     |
     */
 
-    'cipher' => 'AES-256-CBC',
+    'cipher' => env('CIPHER', 'aes-256-cbc'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Key
+    |--------------------------------------------------------------------------
+    |
+    | This key is used by the Illuminate encrypter service and should be set
+    | to a random, 32 character string, otherwise these encrypted strings
+    | will not be safe. Please do this before deploying an application!
+    |
+    */
 
     'key' => env('APP_KEY'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Key Length
+    |--------------------------------------------------------------------------
+    |
+    | This value determines the length of the application key that should be
+    | generated. The default is 32 characters, but you can change this to
+    | any value that is appropriate for your application.
+    |
+    */
+
+    'key_length' => env('APP_KEY_LENGTH', 32),
 
     'previous_keys' => [
         ...array_filter(

@@ -28,13 +28,31 @@
             @foreach($todos as $todo)
                 <div class="todo-item {{ $todo->completed ? 'completed' : '' }}">
                     <div class="todo-actions">
-                        <form action="{{ route('todos.toggle-complete', $todo->id) }}" method="POST" class="toggle-form">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="toggle-button">
-                                <span class="checkmark {{ $todo->completed ? 'checked' : '' }}"></span>
+                        <div class="flex items-center space-x-2">
+                            <form action="{{ route('todos.toggle', $todo) }}" method="POST" class="inline">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="toggle-button" title="{{ $todo->completed ? 'Отметить как невыполненную' : 'Отметить как выполненную' }}">
+                                    <i class="fas {{ $todo->completed ? 'fa-check-circle text-green-500' : 'fa-circle text-gray-400' }}"></i>
+                                </button>
+                            </form>
+
+                            <button onclick="openReminderModal({{ $todo->id }})" class="reminder-button" title="Установить напоминание">
+                                <i class="fas fa-check text-gray-400 hover:text-yellow-500"></i>
                             </button>
-                        </form>
+
+                            <a href="{{ route('todos.edit', $todo) }}" class="edit-button" title="Редактировать">
+                                <i class="fas fa-edit text-gray-400 hover:text-blue-500"></i>
+                            </a>
+
+                            <form action="{{ route('todos.destroy', $todo) }}" method="POST" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="delete-button" title="Удалить" onclick="return confirm('Вы уверены?')">
+                                    <i class="fas fa-trash text-gray-400 hover:text-red-500"></i>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                     
                     <div class="todo-content">
@@ -48,26 +66,6 @@
                                 {{ $todo->board->name }}
                             </div>
                         @endif
-                    </div>
-                    
-                    <div class="todo-actions right">
-                        <a href="{{ route('todos.edit', $todo->id) }}" class="edit-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-                            </svg>
-                        </a>
-                        
-                        <form action="{{ route('todos.destroy', $todo->id) }}" method="POST" class="delete-form">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="delete-button">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 6h18"></path>
-                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                                </svg>
-                            </button>
-                        </form>
                     </div>
                 </div>
             @endforeach
@@ -87,6 +85,80 @@
             </div>
         @endif
     </div>
+
+    <!-- Модальное окно для установки напоминания -->
+    <div id="reminderModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Установить напоминание</h3>
+                <form id="reminderForm" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="mb-4">
+                        <label for="reminder_date" class="block text-sm font-medium text-gray-700">Дата напоминания</label>
+                        <input type="date" name="reminder_date" id="reminder_date" 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div class="mb-4">
+                        <label for="reminder_time" class="block text-sm font-medium text-gray-700">Время напоминания</label>
+                        <input type="time" name="reminder_time" id="reminder_time" 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeReminderModal()" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Отмена
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                            Установить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function openReminderModal(todoId) {
+        const modal = document.getElementById('reminderModal');
+        const form = document.getElementById('reminderForm');
+        form.action = `/todos/${todoId}/reminder`;
+        
+        // Устанавливаем минимальную дату как сегодня
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('reminder_date').min = today;
+        
+        modal.classList.remove('hidden');
+    }
+
+    function closeReminderModal() {
+        const modal = document.getElementById('reminderModal');
+        modal.classList.add('hidden');
+    }
+
+    // Обработка отправки формы
+    document.getElementById('reminderForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const date = document.getElementById('reminder_date').value;
+        const time = document.getElementById('reminder_time').value;
+        
+        if (!date || !time) {
+            alert('Пожалуйста, выберите дату и время');
+            return;
+        }
+        
+        const reminderAt = `${date}T${time}`;
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'reminder_at';
+        input.value = reminderAt;
+        this.appendChild(input);
+        
+        this.submit();
+    });
+    </script>
 @endsection
 
 @section('styles')

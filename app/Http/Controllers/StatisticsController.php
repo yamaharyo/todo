@@ -37,14 +37,27 @@ class StatisticsController extends Controller
         $statistics = [
             'total' => $query->count(),
             'completed' => $query->where('completed', true)->count(),
-            'by_day' => $query->where('completed', true)
-                ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
-                ->groupBy('date')
-                ->get(),
-            'by_board' => $query->where('completed', true)
-                ->selectRaw('board_id, COUNT(*) as count')
-                ->groupBy('board_id')
-                ->get()
+            'incomplete' => $query->where('completed', false)->count(),
+            'by_day' => [
+                'completed' => $query->where('completed', true)
+                    ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                    ->groupBy('date')
+                    ->get(),
+                'incomplete' => $query->where('completed', false)
+                    ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
+                    ->groupBy('date')
+                    ->get()
+            ],
+            'by_board' => [
+                'completed' => $query->where('completed', true)
+                    ->selectRaw('board_id, COUNT(*) as count')
+                    ->groupBy('board_id')
+                    ->get(),
+                'incomplete' => $query->where('completed', false)
+                    ->selectRaw('board_id, COUNT(*) as count')
+                    ->groupBy('board_id')
+                    ->get()
+            ]
         ];
 
         return view('statistics.index', compact('boards', 'statistics', 'selectedBoardId', 'searchQuery', 'startDate', 'endDate'));

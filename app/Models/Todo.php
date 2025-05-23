@@ -22,10 +22,12 @@ class Todo extends Model
         'user_id',
         'board_id',
         'position',
+        'reminder_at'
     ];
     
     protected $casts = [
         'completed' => 'boolean',
+        'reminder_at' => 'datetime'
     ];
     
     /**

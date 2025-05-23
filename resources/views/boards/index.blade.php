@@ -45,7 +45,7 @@
                             @foreach($board->todos as $todo)
                                 <div class="todo-item {{ $todo->completed ? 'completed' : '' }}" id="todo-{{ $todo->id }}">
                                     <div class="todo-actions">
-                                        <form action="{{ route('todos.toggle-complete', $todo->id) }}" method="POST" class="toggle-form">
+                                        <form action="{{ route('todos.toggle', $todo->id) }}" method="POST" class="toggle-form">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="toggle-button">

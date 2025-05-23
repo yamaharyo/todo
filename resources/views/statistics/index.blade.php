@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="mb-8">
-        <h1 class="text-2xl font-bold mb-4">Статистика выполненных задач</h1>
+        <h1 class="text-2xl font-bold mb-4">Статистика задач</h1>
         
         <form action="{{ route('statistics.index') }}" method="GET" class="mb-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -53,6 +53,7 @@
                 <div class="space-y-2">
                     <p>Всего задач: {{ $statistics['total'] }}</p>
                     <p>Выполнено задач: {{ $statistics['completed'] }}</p>
+                    <p>Невыполнено задач: {{ $statistics['incomplete'] }}</p>
                     <p>Процент выполнения: {{ $statistics['total'] > 0 ? round(($statistics['completed'] / $statistics['total']) * 100) : 0 }}%</p>
                 </div>
             </div>
@@ -77,37 +78,65 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Данные для графика по доскам
     const boardData = {
-        labels: {!! json_encode($statistics['by_board']->map(function($item) use ($boards) {
+        labels: {!! json_encode($statistics['by_board']['completed']->map(function($item) use ($boards) {
             return $boards->firstWhere('id', $item->board_id)->name;
         })) !!},
-        datasets: [{
-            data: {!! json_encode($statistics['by_board']->pluck('count')) !!},
-            backgroundColor: {!! json_encode($statistics['by_board']->map(function($item) use ($boards) {
-                return $boards->firstWhere('id', $item->board_id)->color;
-            })) !!}
-        }]
+        datasets: [
+            {
+                label: 'Выполненные задачи',
+                data: {!! json_encode($statistics['by_board']['completed']->pluck('count')) !!},
+                backgroundColor: {!! json_encode($statistics['by_board']['completed']->map(function($item) use ($boards) {
+                    return $boards->firstWhere('id', $item->board_id)->color;
+                })) !!}
+            },
+            {
+                label: 'Невыполненные задачи',
+                data: {!! json_encode($statistics['by_board']['incomplete']->pluck('count')) !!},
+                backgroundColor: {!! json_encode($statistics['by_board']['incomplete']->map(function($item) use ($boards) {
+                    return $boards->firstWhere('id', $item->board_id)->color + '80';
+                })) !!}
+            }
+        ]
     };
 
     // Данные для графика по дням
     const dayData = {
-        labels: {!! json_encode($statistics['by_day']->pluck('date')) !!},
-        datasets: [{
-            label: 'Выполненные задачи',
-            data: {!! json_encode($statistics['by_day']->pluck('count')) !!},
-            borderColor: 'rgb(59, 130, 246)',
-            tension: 0.1
-        }]
+        labels: {!! json_encode($statistics['by_day']['completed']->pluck('date')) !!},
+        datasets: [
+            {
+                label: 'Выполненные задачи',
+                data: {!! json_encode($statistics['by_day']['completed']->pluck('count')) !!},
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 1
+            },
+            {
+                label: 'Невыполненные задачи',
+                data: {!! json_encode($statistics['by_day']['incomplete']->pluck('count')) !!},
+                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                borderColor: 'rgb(239, 68, 68)',
+                borderWidth: 1
+            }
+        ]
     };
 
     // Создание графика по доскам
     new Chart(document.getElementById('boardChart'), {
-        type: 'pie',
+        type: 'bar',
         data: boardData,
         options: {
             responsive: true,
             plugins: {
                 legend: {
-                    position: 'right'
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
                 }
             }
         }
@@ -115,10 +144,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Создание графика по дням
     new Chart(document.getElementById('dayChart'), {
-        type: 'line',
+        type: 'bar',
         data: dayData,
         options: {
             responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,

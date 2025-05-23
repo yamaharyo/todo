@@ -7,6 +7,9 @@ use App\Models\Board;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+use App\Services\TelegramService;
 
 class TodoController extends Controller
 {
@@ -185,5 +188,72 @@ class TodoController extends Controller
             'success' => true,
             'message' => 'Задача успешно перемещена на новую доску'
         ]);
+    }
+
+    public function setReminder(Request $request, Todo $todo)
+    {
+        Log::info('Setting reminder', [
+            'task_id' => $todo->id,
+            'request' => $request->all()
+        ]);
+
+        $request->validate([
+            'reminder_date' => 'required|date',
+            'reminder_time' => 'required|date_format:H:i'
+        ]);
+
+        $reminderAt = Carbon::parse($request->reminder_date . ' ' . $request->reminder_time);
+
+        if ($reminderAt->isPast()) {
+            Log::warning('Attempt to set reminder in the past', [
+                'task_id' => $todo->id,
+                'reminder_at' => $reminderAt
+            ]);
+            return back()->with('error', 'Нельзя установить напоминание в прошлом');
+        }
+
+        try {
+            $todo->reminder_at = $reminderAt;
+            $saved = $todo->save();
+
+            if ($saved) {
+                Log::info('Reminder saved', [
+                    'task_id' => $todo->id,
+                    'reminder_at' => $reminderAt
+                ]);
+
+                // Отправляем уведомление через Telegram
+                $telegramService = app(TelegramService::class);
+                $message = "🔔 Напоминание!\n\nЗадача: {$todo->title}\nВремя: {$reminderAt->format('d.m.Y H:i')}";
+                $telegramService->sendMessage($message);
+
+                return back()->with('success', 'Напоминание установлено');
+            }
+
+            Log::error('Failed to save reminder', [
+                'task_id' => $todo->id,
+                'reminder_at' => $reminderAt
+            ]);
+            return back()->with('error', 'Не удалось установить напоминание');
+        } catch (\Exception $e) {
+            Log::error('Exception while setting reminder', [
+                'task_id' => $todo->id,
+                'error' => $e->getMessage()
+            ]);
+            return back()->with('error', 'Произошла ошибка при установке напоминания');
+        }
+    }
+
+    public function toggle(Todo $todo)
+    {
+        // Проверка прав доступа
+        Gate::authorize('update', $todo);
+        
+        // Инвертируем статус задачи
+        $todo->update([
+            'completed' => !$todo->completed
+        ]);
+        
+        return redirect()->back()->with('success', 'Статус задачи обновлен');
     }
 }

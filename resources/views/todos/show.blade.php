@@ -14,8 +14,11 @@
                 <h3 class="todo-title">{{ $todo->title }}</h3>
                 <p class="todo-description">{{ $todo->description ?: 'Нет описания' }}</p>
                 <p>Статус: <strong>{{ $todo->completed ? 'Выполнено' : 'Не выполнено' }}</strong></p>
-                <p>Создано: {{ $todo->created_at->format('d.m.Y H:i') }}</p>
-                <p>Обновлено: {{ $todo->updated_at->format('d.m.Y H:i') }}</p>
+                <p>Создано: {{ $todo->created_at->format('d.m.Y') }} в {{ $todo->created_at->format('H:i') }}</p>
+                <p>Обновлено: {{ $todo->updated_at->format('d.m.Y') }} в {{ $todo->updated_at->format('H:i') }}</p>
+                @if($todo->reminder_at)
+                    <p>Напоминание: {{ $todo->reminder_at->format('d.m.Y H:i') }}</p>
+                @endif
             </div>
         </div>
         
@@ -34,5 +37,34 @@
                 <button type="submit" class="btn btn-danger" onclick="return confirm('Вы уверены?')">Удалить</button>
             </form>
         </div>
+
+        <div style="margin-top: 20px;">
+            <h3>Установить напоминание</h3>
+            <form action="{{ route('todos.reminder', $todo) }}" method="POST">
+                @csrf
+                @method('PATCH')
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="date" name="reminder_date" required min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}">
+                    <input type="time" name="reminder_time" required value="{{ date('H:i', strtotime('+1 minute')) }}">
+                    <button type="submit" class="btn">Установить напоминание</button>
+                </div>
+            </form>
+        </div>
     </div>
+
+    <script>
+        // Обновляем время каждую минуту
+        setInterval(function() {
+            const now = new Date();
+            const timeInput = document.querySelector('input[name="reminder_time"]');
+            const dateInput = document.querySelector('input[name="reminder_date"]');
+            
+            // Устанавливаем текущую дату
+            dateInput.value = now.toISOString().split('T')[0];
+            
+            // Устанавливаем время + 1 минута
+            now.setMinutes(now.getMinutes() + 1);
+            timeInput.value = now.toTimeString().slice(0, 5);
+        }, 60000);
+    </script>
 @endsection 
