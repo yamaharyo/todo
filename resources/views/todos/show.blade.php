@@ -40,17 +40,75 @@
 
         <div style="margin-top: 20px;">
             <h3>Установить напоминание</h3>
-            <form action="{{ route('todos.reminder', $todo) }}" method="POST">
+            <form action="{{ route('todos.reminder', $todo) }}" method="POST" id="reminder-form">
                 @csrf
                 @method('PATCH')
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <input type="date" name="reminder_date" required min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}">
                     <input type="time" name="reminder_time" required value="{{ date('H:i', strtotime('+1 minute')) }}">
-                    <button type="submit" class="btn">Установить напоминание</button>
+                    <label class="reminder-checkbox">
+                        <input type="checkbox" name="set_reminder" onchange="document.getElementById('reminder-form').submit()">
+                        <span class="checkmark"></span>
+                    </label>
                 </div>
             </form>
         </div>
     </div>
+
+    <style>
+        .reminder-checkbox {
+            position: relative;
+            padding-left: 35px;
+            cursor: pointer;
+            font-size: 22px;
+            user-select: none;
+        }
+
+        .reminder-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 25px;
+            width: 25px;
+            background-color: #eee;
+            border-radius: 50%;
+        }
+
+        .reminder-checkbox:hover input ~ .checkmark {
+            background-color: #ccc;
+        }
+
+        .reminder-checkbox input:checked ~ .checkmark {
+            background-color: #2196F3;
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .reminder-checkbox input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        .reminder-checkbox .checkmark:after {
+            top: 9px;
+            left: 9px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+        }
+    </style>
 
     <script>
         // Обновляем время каждую минуту

@@ -78,22 +78,22 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Данные для графика по доскам
     const boardData = {
-        labels: {!! json_encode($statistics['by_board']['completed']->map(function($item) use ($boards) {
-            return $boards->firstWhere('id', $item->board_id)->name;
-        })) !!},
+        labels: {!! json_encode($boards->pluck('name')) !!},
         datasets: [
             {
                 label: 'Выполненные задачи',
-                data: {!! json_encode($statistics['by_board']['completed']->pluck('count')) !!},
-                backgroundColor: {!! json_encode($statistics['by_board']['completed']->map(function($item) use ($boards) {
-                    return $boards->firstWhere('id', $item->board_id)->color;
-                })) !!}
+                data: {!! json_encode($boards->map(function($board) use ($statistics) {
+                    return $statistics['by_board']['completed']->firstWhere('board_id', $board->id)?->count ?? 0;
+                })) !!},
+                backgroundColor: {!! json_encode($boards->pluck('color')) !!}
             },
             {
                 label: 'Невыполненные задачи',
-                data: {!! json_encode($statistics['by_board']['incomplete']->pluck('count')) !!},
-                backgroundColor: {!! json_encode($statistics['by_board']['incomplete']->map(function($item) use ($boards) {
-                    return $boards->firstWhere('id', $item->board_id)->color + '80';
+                data: {!! json_encode($boards->map(function($board) use ($statistics) {
+                    return $statistics['by_board']['incomplete']->firstWhere('board_id', $board->id)?->count ?? 0;
+                })) !!},
+                backgroundColor: {!! json_encode($boards->map(function($board) {
+                    return $board->color . '80';
                 })) !!}
             }
         ]
@@ -101,7 +101,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Данные для графика по дням
     const dayData = {
-        labels: {!! json_encode($statistics['by_day']['completed']->pluck('date')) !!},
+        labels: {!! json_encode($statistics['by_day']['completed']->map(function($item) {
+            return Carbon\Carbon::parse($item->date)->format('d.m.Y');
+        })) !!},
         datasets: [
             {
                 label: 'Выполненные задачи',

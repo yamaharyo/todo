@@ -67,6 +67,22 @@
                             </div>
                         @endif
                     </div>
+
+                    @if($todo->reminder_at)
+                        @php
+                            $reminderTime = $todo->reminder_at->format('Y-m-d H:i:s');
+                            \Illuminate\Support\Facades\Log::info('Reminder time in template', [
+                                'task_id' => $todo->id,
+                                'reminder_at' => $todo->reminder_at,
+                                'formatted' => $reminderTime,
+                                'raw' => $todo->reminder_at->toDateTimeString()
+                            ]);
+                        @endphp
+                        <div data-reminder="{{ $reminderTime }}" 
+                             data-task-id="{{ $todo->id }}" 
+                             style="display: none;">
+                        </div>
+                    @endif
                 </div>
             @endforeach
         @else
@@ -93,7 +109,6 @@
                 <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Установить напоминание</h3>
                 <form id="reminderForm" method="POST">
                     @csrf
-                    @method('PATCH')
                     <div class="mb-4">
                         <label for="reminder_date" class="block text-sm font-medium text-gray-700">Дата напоминания</label>
                         <input type="date" name="reminder_date" id="reminder_date" 
@@ -118,47 +133,6 @@
             </div>
         </div>
     </div>
-
-    <script>
-    function openReminderModal(todoId) {
-        const modal = document.getElementById('reminderModal');
-        const form = document.getElementById('reminderForm');
-        form.action = `/todos/${todoId}/reminder`;
-        
-        // Устанавливаем минимальную дату как сегодня
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('reminder_date').min = today;
-        
-        modal.classList.remove('hidden');
-    }
-
-    function closeReminderModal() {
-        const modal = document.getElementById('reminderModal');
-        modal.classList.add('hidden');
-    }
-
-    // Обработка отправки формы
-    document.getElementById('reminderForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const date = document.getElementById('reminder_date').value;
-        const time = document.getElementById('reminder_time').value;
-        
-        if (!date || !time) {
-            alert('Пожалуйста, выберите дату и время');
-            return;
-        }
-        
-        const reminderAt = `${date}T${time}`;
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'reminder_at';
-        input.value = reminderAt;
-        this.appendChild(input);
-        
-        this.submit();
-    });
-    </script>
 @endsection
 
 @section('styles')
@@ -233,4 +207,8 @@
         transform: scale(1.1);
     }
 </style>
-@endsection 
+@endsection
+
+@push('scripts')
+@vite(['resources/js/reminders.js'])
+@endpush 

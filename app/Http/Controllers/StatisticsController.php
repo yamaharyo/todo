@@ -7,6 +7,7 @@ use App\Models\Todo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class StatisticsController extends Controller
 {
@@ -20,44 +21,83 @@ class StatisticsController extends Controller
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth());
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth());
 
-        $query = Todo::where('user_id', $user->id)
+        // Базовая статистика
+        $baseQuery = Todo::where('user_id', $user->id)
             ->whereBetween('created_at', [$startDate, $endDate]);
 
         if ($selectedBoardId) {
-            $query->where('board_id', $selectedBoardId);
+            $baseQuery->where('board_id', $selectedBoardId);
         }
 
         if ($searchQuery) {
-            $query->where(function($q) use ($searchQuery) {
+            $baseQuery->where(function($q) use ($searchQuery) {
                 $q->where('title', 'like', "%{$searchQuery}%")
                   ->orWhere('description', 'like', "%{$searchQuery}%");
             });
         }
 
         $statistics = [
-            'total' => $query->count(),
-            'completed' => $query->where('completed', true)->count(),
-            'incomplete' => $query->where('completed', false)->count(),
-            'by_day' => [
-                'completed' => $query->where('completed', true)
-                    ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
-                    ->groupBy('date')
-                    ->get(),
-                'incomplete' => $query->where('completed', false)
-                    ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
-                    ->groupBy('date')
-                    ->get()
-            ],
-            'by_board' => [
-                'completed' => $query->where('completed', true)
-                    ->selectRaw('board_id, COUNT(*) as count')
-                    ->groupBy('board_id')
-                    ->get(),
-                'incomplete' => $query->where('completed', false)
-                    ->selectRaw('board_id, COUNT(*) as count')
-                    ->groupBy('board_id')
-                    ->get()
-            ]
+            'total' => $baseQuery->count(),
+            'completed' => (clone $baseQuery)->where('completed', true)->count(),
+            'incomplete' => (clone $baseQuery)->where('completed', false)->count(),
+        ];
+
+        // Статистика по дням
+        $daysQuery = Todo::where('user_id', $user->id)
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        if ($selectedBoardId) {
+            $daysQuery->where('board_id', $selectedBoardId);
+        }
+
+        if ($searchQuery) {
+            $daysQuery->where(function($q) use ($searchQuery) {
+                $q->where('title', 'like', "%{$searchQuery}%")
+                  ->orWhere('description', 'like', "%{$searchQuery}%");
+            });
+        }
+
+        $statistics['by_day'] = [
+            'completed' => (clone $daysQuery)
+                ->where('completed', true)
+                ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get(),
+            'incomplete' => (clone $daysQuery)
+                ->where('completed', false)
+                ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get()
+        ];
+
+        // Статистика по доскам
+        $boardsQuery = Todo::where('user_id', $user->id)
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        if ($selectedBoardId) {
+            $boardsQuery->where('board_id', $selectedBoardId);
+        }
+
+        if ($searchQuery) {
+            $boardsQuery->where(function($q) use ($searchQuery) {
+                $q->where('title', 'like', "%{$searchQuery}%")
+                  ->orWhere('description', 'like', "%{$searchQuery}%");
+            });
+        }
+
+        $statistics['by_board'] = [
+            'completed' => (clone $boardsQuery)
+                ->where('completed', true)
+                ->select('board_id', DB::raw('COUNT(*) as count'))
+                ->groupBy('board_id')
+                ->get(),
+            'incomplete' => (clone $boardsQuery)
+                ->where('completed', false)
+                ->select('board_id', DB::raw('COUNT(*) as count'))
+                ->groupBy('board_id')
+                ->get()
         ];
 
         return view('statistics.index', compact('boards', 'statistics', 'selectedBoardId', 'searchQuery', 'startDate', 'endDate'));
