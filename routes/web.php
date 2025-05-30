@@ -41,7 +41,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/todos/{todo}/edit', [TodoController::class, 'edit'])->name('todos.edit');
     Route::put('/todos/{todo}', [TodoController::class, 'update'])->name('todos.update');
     Route::delete('/todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
-    Route::post('/todos/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
+    Route::patch('/todos/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
     Route::post('/todos/{todo}/reminder', [TodoController::class, 'setReminder'])->name('todos.reminder');
     Route::post('/todos/{todo}/send-reminder', [TodoController::class, 'sendReminder'])->name('todos.send-reminder');
     Route::post('/todos/{todo}/move', [TodoController::class, 'moveToBoard'])->name('todos.move');

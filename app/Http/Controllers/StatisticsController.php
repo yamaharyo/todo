@@ -100,6 +100,12 @@ class StatisticsController extends Controller
                 ->get()
         ];
 
+        // Добавляем логирование для отладки
+        \Illuminate\Support\Facades\Log::info('Statistics data', [
+            'by_day' => $statistics['by_day'],
+            'by_board' => $statistics['by_board']
+        ]);
+
         return view('statistics.index', compact('boards', 'statistics', 'selectedBoardId', 'searchQuery', 'startDate', 'endDate'));
     }
 } 

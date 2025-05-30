@@ -3,9 +3,10 @@
 @section('title', 'Все задачи')
 
 @section('content')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <div class="page-header">
         <h1>Все мои задачи</h1>
-        <div>
+        <div class="header-buttons">
             <a href="{{ route('todos.create') }}" class="btn">Создать задачу</a>
             <a href="{{ route('boards.index') }}" class="btn">Доски</a>
         </div>
@@ -28,28 +29,34 @@
             @foreach($todos as $todo)
                 <div class="todo-item {{ $todo->completed ? 'completed' : '' }}">
                     <div class="todo-actions">
-                        <div class="flex items-center space-x-2">
+                        <div class="action-buttons">
+                            <button onclick="openReminderModal({{ $todo->id }})" class="action-button reminder {{ $todo->reminder_at ? 'active' : '' }}" title="Настроить уведомление о задаче">
+                                <i class="fas fa-check"></i>
+                                <span>Выбрать</span>
+                            </button>
+
                             <form action="{{ route('todos.toggle', $todo) }}" method="POST" class="inline">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="toggle-button" title="{{ $todo->completed ? 'Отметить как невыполненную' : 'Отметить как выполненную' }}">
-                                    <i class="fas {{ $todo->completed ? 'fa-check-circle text-green-500' : 'fa-circle text-gray-400' }}"></i>
+                                <button type="submit" class="action-button toggle" title="{{ $todo->completed ? 'Отметить задачу как невыполненную' : 'Отметить задачу как выполненную' }}">
+                                    <i class="fas {{ $todo->completed ? 'fa-check-circle' : 'fa-circle' }}"></i>
+                                    <span>{{ $todo->completed ? 'Выполнено' : 'Не выполнено' }}</span>
                                 </button>
                             </form>
 
-                            <button onclick="openReminderModal({{ $todo->id }})" class="reminder-button" title="Установить напоминание">
-                                <i class="fas fa-check text-gray-400 hover:text-yellow-500"></i>
-                            </button>
-
-                            <a href="{{ route('todos.edit', $todo) }}" class="edit-button" title="Редактировать">
-                                <i class="fas fa-edit text-gray-400 hover:text-blue-500"></i>
-                            </a>
+                            <form action="{{ route('todos.edit', $todo) }}" method="GET" class="inline">
+                                <button type="submit" class="action-button edit" title="Изменить название и описание задачи">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Изменить</span>
+                                </button>
+                            </form>
 
                             <form action="{{ route('todos.destroy', $todo) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="delete-button" title="Удалить" onclick="return confirm('Вы уверены?')">
-                                    <i class="fas fa-trash text-gray-400 hover:text-red-500"></i>
+                                <button type="submit" class="action-button delete" title="Удалить задачу навсегда" onclick="return confirm('Вы уверены, что хотите удалить эту задачу?')">
+                                    <i class="fas fa-trash"></i>
+                                    <span>Удалить</span>
                                 </button>
                             </form>
                         </div>
@@ -119,13 +126,13 @@
                         <input type="time" name="reminder_time" id="reminder_time" 
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
-                    <div class="flex justify-end space-x-3">
+                    <div class="modal-buttons">
                         <button type="button" onclick="closeReminderModal()" 
-                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                                class="action-button cancel">
                             Отмена
                         </button>
                         <button type="submit" 
-                                class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                                class="action-button submit">
                             Установить
                         </button>
                     </div>
@@ -174,37 +181,145 @@
         background-color: var(--hover-color);
     }
     
-    .toggle-button {
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    
+    .action-button {
         background: none;
         border: none;
-        padding: 0;
+        padding: 12px 16px;
         cursor: pointer;
         display: flex;
         align-items: center;
-        justify-content: center;
-        transition: transform 0.2s;
-    }
-    
-    .toggle-button:hover {
-        transform: scale(1.1);
-    }
-    
-    .edit-button, .delete-button {
-        background: none;
-        border: none;
-        padding: 5px;
-        margin: 0 2px;
-        cursor: pointer;
+        gap: 8px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
         color: var(--text-muted);
-        transition: color 0.2s, transform 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        font-size: 1.1rem;
+        min-width: auto;
+        min-height: 48px;
     }
     
-    .edit-button:hover, .delete-button:hover {
-        color: var(--text-color);
+    .action-button i {
+        font-size: 1.2rem;
+    }
+    
+    .action-button span {
+        font-size: 1rem;
+        white-space: nowrap;
+    }
+    
+    .action-button:hover {
         transform: scale(1.1);
+        background-color: var(--hover-color);
+    }
+    
+    .action-button.reminder {
+        position: relative;
+    }
+    
+    .action-button.reminder i {
+        color: var(--text-muted);
+    }
+    
+    .action-button.reminder:hover i {
+        color: var(--success-color, #10B981);
+    }
+    
+    .action-button.reminder:hover span {
+        color: var(--success-color, #10B981);
+    }
+    
+    .action-button.reminder.active {
+        background-color: var(--success-color, #10B981);
+        color: white;
+        box-shadow: 0 0 0 2px var(--success-color, #10B981),
+                    0 0 10px var(--success-color, #10B981);
+    }
+    
+    .action-button.reminder.active i,
+    .action-button.reminder.active span {
+        color: white;
+    }
+    
+    .action-button.toggle i {
+        color: var(--text-muted);
+    }
+    
+    .action-button.toggle:hover i {
+        color: var(--success-color, #10B981);
+    }
+    
+    .todo-item.completed .action-button.toggle i {
+        color: var(--success-color, #10B981);
+    }
+    
+    .todo-item.completed .action-button.toggle span {
+        color: var(--success-color, #10B981);
+    }
+    
+    .action-button.edit i {
+        color: var(--text-muted);
+    }
+    
+    .action-button.edit:hover i {
+        color: var(--info-color, #3B82F6);
+    }
+    
+    .action-button.delete i {
+        color: var(--text-muted);
+    }
+    
+    .action-button.delete:hover i {
+        color: var(--danger-color, #EF4444);
+    }
+    
+    .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+    }
+    
+    .action-button.cancel {
+        background-color: var(--gray-300, #D1D5DB);
+        color: var(--gray-700, #374151);
+        padding: 8px 16px;
+        font-size: 1rem;
+    }
+    
+    .action-button.submit {
+        background-color: var(--primary-color, #4F46E5);
+        color: white;
+        padding: 8px 16px;
+        font-size: 1rem;
+    }
+    
+    .page-header {
+        margin-bottom: 24px;
+    }
+    
+    .header-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        background-color: var(--primary-color, #4F46E5);
+        color: white;
+        transition: background-color 0.2s ease;
+        font-size: 1rem;
+    }
+    
+    .btn:hover {
+        background-color: var(--primary-dark, #4338CA);
     }
 </style>
 @endsection

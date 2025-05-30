@@ -2,6 +2,22 @@
 window.openReminderModal = function(todoId) {
     const modal = document.getElementById('reminderModal');
     const form = document.getElementById('reminderForm');
+    const selectButton = document.querySelector(`button[onclick="openReminderModal(${todoId})"]`);
+    
+    // Если кнопка уже активна, деактивируем её и закрываем модальное окно
+    if (selectButton.classList.contains('active')) {
+        selectButton.classList.remove('active');
+        modal.classList.add('hidden');
+        return;
+    }
+    
+    // Проверяем количество уже выбранных задач
+    const activeButtons = document.querySelectorAll('.action-button.reminder.active');
+    if (activeButtons.length >= 1) {
+        alert('Вы уже выбрали задачу для напоминания. Сначала отмените текущий выбор или установите напоминание.');
+        return;
+    }
+    
     form.action = `/todos/${todoId}/reminder`;
     
     // Устанавливаем минимальную дату как сегодня
@@ -9,11 +25,22 @@ window.openReminderModal = function(todoId) {
     document.getElementById('reminder_date').min = today;
     
     modal.classList.remove('hidden');
+    
+    // Добавляем класс active к кнопке выбора
+    if (selectButton) {
+        selectButton.classList.add('active');
+    }
 };
 
 window.closeReminderModal = function() {
     const modal = document.getElementById('reminderModal');
     modal.classList.add('hidden');
+    
+    // Убираем класс active со всех кнопок выбора
+    const selectButtons = document.querySelectorAll('.action-button.reminder');
+    selectButtons.forEach(button => {
+        button.classList.remove('active');
+    });
 };
 
 // Функция для отправки напоминания через Telegram
@@ -102,16 +129,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Форматируем дату и время в нужный формат
             const reminderAt = `${date} ${time}:00`;
             
-            console.log('Form data:', {
-                date,
-                time,
-                reminderAt
-            });
-            
             // Получаем ID задачи из URL формы
             const taskId = this.action.split('/')[2];
             
-            // Отправляем форму
             fetch(this.action, {
                 method: 'POST',
                 headers: {
@@ -124,33 +144,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             })
             .then(async response => {
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Ошибка при установке напоминания');
-                    }
-                    return data;
+                if (!response.ok) {
+                    throw new Error('Ошибка при установке напоминания');
                 }
-                throw new Error('Server did not return JSON');
+                return response.json();
             })
             .then(data => {
                 if (data.success) {
-                    // Закрываем модальное окно
                     closeReminderModal();
-                    
                     // Планируем напоминание
                     scheduleReminder(taskId, reminderAt);
-                    
                     // Показываем сообщение об успехе
-                    alert(data.message || 'Напоминание успешно установлено');
-                    
+                    alert('Напоминание успешно установлено');
                     // Перезагружаем страницу через 1 секунду
                     setTimeout(() => {
                         window.location.reload();
                     }, 1000);
-                } else {
-                    throw new Error(data.error || 'Ошибка при установке напоминания');
                 }
             })
             .catch(error => {
