@@ -20,9 +20,22 @@ window.openReminderModal = function(todoId) {
     
     form.action = `/todos/${todoId}/reminder`;
     
-    // Устанавливаем минимальную дату как сегодня
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('reminder_date').min = today;
+    // Устанавливаем минимальную дату и время
+    const now = new Date();
+    
+    const dateInput = document.getElementById('reminder_date');
+    const timeInput = document.getElementById('reminder_time');
+    
+    // Устанавливаем минимальные значения
+    const minDate = now.toISOString().split('T')[0];
+    const minTime = now.toTimeString().slice(0, 5);
+    
+    dateInput.min = minDate;
+    timeInput.min = minTime;
+    
+    // Устанавливаем значения по умолчанию
+    dateInput.value = minDate;
+    timeInput.value = minTime;
     
     modal.classList.remove('hidden');
     
@@ -132,6 +145,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Получаем ID задачи из URL формы
             const taskId = this.action.split('/')[2];
             
+            console.log('Sending reminder request:', {
+                taskId,
+                reminderAt,
+                url: this.action
+            });
+            
             fetch(this.action, {
                 method: 'POST',
                 headers: {
@@ -144,10 +163,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             })
             .then(async response => {
+                const data = await response.json();
+                console.log('Server response:', {
+                    status: response.status,
+                    data: data
+                });
+                
                 if (!response.ok) {
-                    throw new Error('Ошибка при установке напоминания');
+                    throw new Error(data.error || 'Ошибка при установке напоминания');
                 }
-                return response.json();
+                return data;
             })
             .then(data => {
                 if (data.success) {
@@ -163,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error setting reminder:', error);
                 alert(error.message || 'Ошибка при установке напоминания');
             });
         });

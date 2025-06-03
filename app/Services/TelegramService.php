@@ -16,34 +16,49 @@ class TelegramService
         $this->chatId = config('services.telegram.chat_id');
     }
 
-    public function sendMessage(string $message): bool
+    public function sendMessage($message)
     {
         try {
-            $response = Http::post("https://api.telegram.org/bot{$this->botToken}/sendMessage", [
+            Log::info('TelegramService: Attempting to send message', [
+                'message' => $message,
+                'bot_token' => substr($this->botToken, 0, 5) . '...',
+                'chat_id' => $this->chatId
+            ]);
+
+            $url = "https://api.telegram.org/bot{$this->botToken}/sendMessage";
+            $data = [
                 'chat_id' => $this->chatId,
                 'text' => $message,
                 'parse_mode' => 'HTML'
+            ];
+
+            Log::info('TelegramService: Request data', [
+                'url' => $url,
+                'data' => $data
             ]);
 
-            if ($response->successful()) {
-                Log::info('Telegram message sent successfully', [
-                    'message' => $message,
-                    'response' => $response->json()
+            $response = Http::withoutVerifying()->post($url, $data);
+
+            Log::info('TelegramService: Response received', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            if (!$response->successful()) {
+                Log::error('TelegramService: Failed to send message', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
                 ]);
-                return true;
+                throw new \Exception('Failed to send Telegram message: ' . $response->body());
             }
 
-            Log::error('Failed to send Telegram message', [
-                'message' => $message,
-                'response' => $response->json()
-            ]);
-            return false;
+            return $response->json();
         } catch (\Exception $e) {
-            Log::error('Exception while sending Telegram message', [
-                'message' => $message,
-                'error' => $e->getMessage()
+            Log::error('TelegramService: Exception occurred', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-            return false;
+            throw $e;
         }
     }
 
@@ -67,7 +82,6 @@ class TelegramService
         }
         
         $message .= "\n⏰ Время создания: " . $task->created_at->format('d.m.Y H:i');
-        $message .= "\n\n🔗 <a href='" . route('todos.show', $task->id) . "'>Открыть задачу</a>";
         
         return $message;
     }

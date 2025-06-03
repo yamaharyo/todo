@@ -211,21 +211,6 @@ class TodoController extends Controller
                 'parsed' => $reminderAt->toDateTimeString()
             ]);
             
-            if ($reminderAt->isPast()) {
-                \Illuminate\Support\Facades\Log::warning('Reminder time is in the past', [
-                    'task_id' => $todo->id,
-                    'reminder_at' => $reminderAt->toDateTimeString()
-                ]);
-
-                if ($request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Время напоминания не может быть в прошлом'
-                    ], 422);
-                }
-                return back()->with('error', 'Время напоминания не может быть в прошлом');
-            }
-
             $todo->update([
                 'reminder_at' => $reminderAt
             ]);
@@ -292,11 +277,8 @@ class TodoController extends Controller
         
         try {
             $telegram = new TelegramService();
-            $message = "🔔 Напоминание!\n\n";
-            $message .= "Задача: {$todo->title}\n";
-            $message .= "Время: " . $todo->reminder_at->format('d.m.Y H:i');
+            $result = $telegram->sendTaskReminder($todo);
             
-            $result = $telegram->sendMessage($message);
             Log::info('Telegram message sent', [
                 'task_id' => $todo->id,
                 'result' => $result
